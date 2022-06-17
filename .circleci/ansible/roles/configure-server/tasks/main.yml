@@ -1,0 +1,17 @@
+- name: "Add NodeJS from Nodesource"
+  become: true
+  shell: |
+    curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+
+- name: "Setup NodeJS 16"
+  become: true
+  apt:
+    name: ["nodejs"]
+    state: latest
+    update_cache: yes
+
+- name: "Setup Pm2 global"
+  npm:
+    name: pm2
+    global: yes
