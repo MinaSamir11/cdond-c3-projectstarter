@@ -82,7 +82,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [frontend-node-modules]
       - run:
           name: Build front-end
           command: |
@@ -91,7 +91,7 @@ jobs:
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
-          key: frontend-build
+          key: frontend-node-modules
       - notify-on-failure
 
   build-backend:
@@ -118,7 +118,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [frontend-node-modules]
       - run:
           name: unit-test front-end
           command: |
@@ -133,7 +133,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [frontend-node-modules]
       - run:
           name: unit-test backend-end
           command: |
@@ -148,7 +148,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [frontend-node-modules]
       - run:
           name: scan-vulnerabilities front-end
           command: |
@@ -164,7 +164,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [frontend-node-modules]
       - run:
           name: scan-vulnerabilities backend-end
           command: |
@@ -255,31 +255,47 @@ jobs:
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then 
               curl -d 1 https://kvdb.io/${KVDB_BUCKET}/migrations_${CIRCLE_WORKFLOW_ID:0:8} 
-              echo https://kvdb.io/${KVDB_BUCKET}/migrations_${CIRCLE_WORKFLOW_ID:0:8} 
+              echo "https://kvdb.io/${KVDB_BUCKET}/migrations_${CIRCLE_WORKFLOW_ID:0:8}" 
             fi
       - destroy-environment
       - revert-migrations
 
-  #   deploy-frontend:
-  #     docker:
-  #       # Docker image here that supports AWS CLI
-  #     steps:
-  #       # Checkout code from git
-  #       - run:
-  #           name: Install dependencies
-  #           command: |
-  #             # your code here
-  #       - run:
-  #           name: Get backend url
-  #           command: |
-  #             # your code here
-  #             export API_URL="http://${BACKEND_IP}:3030"
-  #             echo "${API_URL}"
-  #       - run:
-  #           name: Deploy frontend objects
-  #           command: |
-  #             # your code here
-  #       # Here's where you will add some code to rollback on failure
+  deploy-frontend:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - install-aws
+      - install-nodejs
+      - restore_cache:
+          keys: [frontend-node-modules]
+      - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm i
+
+      - run:
+          name: Get backend url
+          command: |
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:8}" \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --output text) 
+
+            export API_URL="http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
+            echo "${API_URL}"
+            cat  frontend/.env
+
+      - run:
+          name: Deploy frontend objects
+          command: |
+            cd frontend
+            npm run build
+            aws s3 sync build s3://udapeople-${CIRCLE_WORKFLOW_ID:0:8}
+
+      - destroy-environment
+      - revert-migrations
 
   #   deploy-backend:
   #     docker:
@@ -397,8 +413,9 @@ workflows:
               configure-infrastructure,
               run-migrations,
             ]
-      # - deploy-frontend:
-      #     requires: [run-migrations]
+      - deploy-frontend:
+          requires: [run-migrations]
+
       # - deploy-backend:
       #     requires: [run-migrations]
       # - smoke-test:
