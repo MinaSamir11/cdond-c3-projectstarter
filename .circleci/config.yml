@@ -36,8 +36,8 @@ commands:
       - run:
           name: setup n0de
           command: |
-            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
-            apt-get install -y nodejs
+            curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+            sudo apt-get install -y nodejs
 
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -100,7 +100,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-node-modules]
       - run:
           name: Back-end build
           command: |
@@ -109,7 +109,7 @@ jobs:
             npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build
+          key: backend-node-modules
       - notify-on-failure
 
   test-frontend:
@@ -208,19 +208,17 @@ jobs:
               --output text) 
             echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
-
       - notify-on-failure
-
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-
       - destroy-environment
 
   configure-infrastructure:
     docker:
       - image: cimg/base:stable
+    description: Setup infrastructure on backend server
     steps:
       - checkout
       - install-ansible
@@ -255,7 +253,7 @@ jobs:
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then 
               curl -d 1 https://kvdb.io/${KVDB_BUCKET}/migrations_${CIRCLE_WORKFLOW_ID:0:8} 
-              echo "https://kvdb.io/${KVDB_BUCKET}/migrations_${CIRCLE_WORKFLOW_ID:0:8}" 
+              cat "https://kvdb.io/${KVDB_BUCKET}/migrations_${CIRCLE_WORKFLOW_ID:0:8}" 
             fi
       - destroy-environment
       - revert-migrations
@@ -269,14 +267,9 @@ jobs:
       - install-nodejs
       - restore_cache:
           keys: [frontend-node-modules]
-      - run:
-          name: Install dependencies
-          command: |
-            cd frontend
-            npm i
 
       - run:
-          name: Get backend url
+          name: Get server backend ip and setup backend url
           command: |
             BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
             --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:8}" \
@@ -284,13 +277,20 @@ jobs:
             --output text) 
 
             export API_URL="http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
-            echo "${API_URL}"
             cat  frontend/.env
+
+      - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm i
 
       - run:
           name: Deploy frontend objects
           command: |
+            ls
             cd frontend
+            ls
             npm run build
             aws s3 sync build s3://udapeople-${CIRCLE_WORKFLOW_ID:0:8}
 
@@ -384,16 +384,16 @@ workflows:
     jobs:
       - build-frontend
       - build-backend
-      - test-frontend:
-          requires: [build-frontend]
-      - test-backend:
-          requires: [build-backend]
-      - scan-backend:
-          requires: [build-backend]
-      - scan-frontend:
-          requires: [build-frontend]
+      # - test-frontend:
+      #     requires: [build-frontend]
+      # - test-backend:
+      #     requires: [build-backend]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - scan-frontend:
+      #     requires: [build-frontend]
       - deploy-infrastructure:
-          requires: [test-frontend, test-backend]
+          # requires: [test-frontend, test-backend]
           filters:
             branches:
               only: [master]
@@ -404,17 +404,18 @@ workflows:
       - run-migrations:
           requires: [configure-infrastructure]
 
+      - deploy-frontend:
+          requires: [run-migrations]
+
       - notify_on_success:
-          requires:
-            [
-              test-frontend,
-              test-backend,
+          requires: [
+              # test-frontend,
+              # test-backend,
               deploy-infrastructure,
               configure-infrastructure,
               run-migrations,
+              deploy-frontend,
             ]
-      - deploy-frontend:
-          requires: [run-migrations]
 
       # - deploy-backend:
       #     requires: [run-migrations]
