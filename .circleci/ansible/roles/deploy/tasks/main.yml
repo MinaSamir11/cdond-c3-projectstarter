@@ -1,8 +1,7 @@
 ---
 - name: "create backend project dir "
-  file:
-    path: ~/backend-project
-    state: directory
+  shell: |
+    mkdir ~/backend-project
 
 - name: "unarchive backend packaged folder"
   unarchive:
