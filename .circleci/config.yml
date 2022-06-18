@@ -312,7 +312,7 @@ jobs:
       - restore_cache:
           keys: [backend-node-modules]
       - run:
-          name: Install dependencies
+          name: Install Backend dependencies
           command: |
             cd backend
             npm install
@@ -322,17 +322,16 @@ jobs:
             cd backend
             npm run build
       - run:
-          name: packaging backend build folder
+          name: Archiving & Packaging Backend Build Folder
           command: |
             cd backend
             npm run build
             tar -czf artifact.tar.gz dist/* package*
-
             cd ..
             cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
 
       - run:
-          name: deploying backend packaged folder, rename values env
+          name: Deploying backend to instance with ansible, rename values env
           command: |
             export TYPEORM_MIGRATIONS_DIR=./migrations
             export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}

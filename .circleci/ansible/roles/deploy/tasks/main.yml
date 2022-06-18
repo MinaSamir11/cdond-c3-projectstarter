@@ -1,23 +1,22 @@
 ---
 - name: "create backend project dir "
   file:
-    path: ~/backend-app
+    path: ~/backend-project
     state: directory
 
 - name: "unarchive backend packaged folder"
   unarchive:
     src: artifact.tar.gz
-    dest: ~/backend-app
+    dest: ~/backend-project
 
 - name: "setup node dep"
   shell: |
-    cd ~/backend-app
+    cd ~/backend-project
     npm install --legacy-peer-deps
 
-- name: "run backend-app with pm2"
+- name: "start backend-project with pm2"
   shell: |
-    cd ~/backend-app/dist
-    pm2 stop default
+    cd ~/backend-project/dist
     pm2 start main.js
 
 - name: "config pm2 to start as a service"
