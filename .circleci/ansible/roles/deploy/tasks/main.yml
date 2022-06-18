@@ -1,0 +1,26 @@
+---
+- name: "create backend project dir "
+  file:
+    path: ~/backend-project
+    state: "directory"
+
+- name: "unarchive backend packaged folder"
+  unarchive:
+    src: artifact.tar.gz
+    dest: ~/backend-project
+
+- name: "setup node dep"
+  shell: |
+    cd ~/backend-project
+    npm install
+
+- name: "run backend-project with pm2"
+  shell: |
+    cd ~/backend-project/dist
+    pm2 stop default
+    pm2 start main.js
+
+- name: "config pm2 to start as a service"
+  become: true
+  shell: |
+    env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu

@@ -14,7 +14,7 @@ commands:
     steps:
       - checkout
       - run:
-          name: Install AWS CLI
+          name: Setup AWS CLI
           command: |
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
               unzip awscliv2.zip
@@ -23,7 +23,7 @@ commands:
   install-ansible:
     steps:
       - run:
-          name: setup ansible
+          name: Setup ansible
           command: |
             sudo apt update
             sudo apt install software-properties-common -y
@@ -34,7 +34,7 @@ commands:
     description: Install nodejs 16
     steps:
       - run:
-          name: setup n0de
+          name: Setup Node
           command: |
             curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
             sudo apt-get install -y nodejs
@@ -316,7 +316,7 @@ jobs:
             cd backend
             npm install
       - run:
-          name: Deploy backend
+          name: Build backend project
           command: |
             cd backend
             npm run build
@@ -327,7 +327,7 @@ jobs:
             npm run build
             tar -czf artifact.tar.gz dist/* package*
             cd ..
-            cp backend/artifact.tar.gz ./circleci/ansible/roles/deploy/files
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
 
       - run:
           name: deploying backend packaged folder, rename values env
@@ -335,7 +335,7 @@ jobs:
             export TYPEORM_MIGRATIONS_DIR=./migrations
             export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
             export TYPEORM_MIGRATIONS=./migrations/*.ts
-            cd ./circleci/ansible
+            cd .circleci/ansible
             ansible-playbook -i inventory.txt deploy-backend.yml
 
       - destroy-environment
