@@ -19,6 +19,8 @@
     cd ~/backend-project/dist
     pm2 start main.js
 
+  register: execute_code
+
 - name: "config pm2 to start as a service"
   become: true
   shell: |
