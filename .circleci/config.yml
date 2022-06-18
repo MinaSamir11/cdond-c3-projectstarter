@@ -164,7 +164,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-node-modules]
+          keys: [backend-node-modules]
       - run:
           name: scan-vulnerabilities backend-end
           command: |
