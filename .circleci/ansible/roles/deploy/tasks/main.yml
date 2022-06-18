@@ -1,11 +1,8 @@
 ---
 - name: "create backend project dir "
   file:
-    path: ~/backend-project
+    path: /home/ubuntu/backend-project
     state: directory
-    owner: www-data
-    group: www-data
-    mode: 0775
 
 - name: "unarchive backend packaged folder"
   unarchive:
