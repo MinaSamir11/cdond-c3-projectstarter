@@ -7,16 +7,16 @@
 - name: "unarchive backend packaged folder"
   unarchive:
     src: artifact.tar.gz
-    dest: ~/backend-project
+    dest: /home/ubuntu/backend-project
 
 - name: "setup node dep"
   shell: |
-    cd ~/backend-project
+    cd /home/ubuntu/backend-project
     npm install --legacy-peer-deps
 
 - name: "start backend-project with pm2"
   shell: |
-    cd ~/backend-project/dist
+    cd /home/ubuntu/backend-project/dist
     pm2 start main.js
 
   register: execute_code
