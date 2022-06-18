@@ -275,7 +275,7 @@ jobs:
             --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:8}" \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --output text) 
-
+             
             export API_URL="http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
             cat  frontend/.env
 
@@ -291,11 +291,14 @@ jobs:
             ls
             cd frontend
             ls
+            echo ${API_URL}
             npm run build
-            aws s3 sync build s3://udapeople-${CIRCLE_WORKFLOW_ID:0:8}
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:8} --recursive
 
       - destroy-environment
       - revert-migrations
+
+      # aws s3 cp build/ s3://udapeople-${CIRCLE_WORKFLOW_ID:0:8} --recursive --include "*"
 
   #   deploy-backend:
   #     docker:
@@ -411,6 +414,8 @@ workflows:
           requires: [
               # test-frontend,
               # test-backend,
+              # build-front,
+              # build-backend,
               deploy-infrastructure,
               configure-infrastructure,
               run-migrations,
