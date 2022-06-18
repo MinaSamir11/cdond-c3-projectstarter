@@ -1,5 +1,5 @@
 ---
-- name: deployment play
+- name: "deployment play"
   hosts: web
   user: ubuntu
   become: true
@@ -36,4 +36,5 @@
 
     - setup:
 
-  roles: -deploy
+  roles: 
+   -deploy
