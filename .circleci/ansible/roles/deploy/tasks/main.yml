@@ -12,7 +12,7 @@
 - name: "setup node dep"
   shell: |
     cd ~/backend-app
-    npm i
+    npm install --legacy-peer-deps
 
 - name: "run backend-app with pm2"
   shell: |
