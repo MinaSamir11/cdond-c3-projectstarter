@@ -271,6 +271,12 @@ jobs:
           keys: [frontend-node-modules]
 
       - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm i
+
+      - run:
           name: Get server backend ip and setup backend url
           command: |
             BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
@@ -278,18 +284,17 @@ jobs:
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --output text) 
              
-            export API_URL="http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
-            cat  frontend/.env
-
-      - run:
-          name: Install dependencies
-          command: |
+            export API_URL=API_URL="http://${BACKEND_PUBLIC_IP}:3030"
+            pwd
             cd frontend
-            npm i
+            touch .env
+            echo $API_URL > .env
+            cat  .env
 
       - run:
           name: Deploy frontend objects
           command: |
+            pwd
             cd frontend
             echo ${API_URL}
             npm run build
@@ -459,7 +464,7 @@ workflows:
           requires: [configure-infrastructure]
 
       - deploy-frontend:
-          requires: [run-migrations]
+          requires: [run-migrations, deploy-backend]
 
       - notify_on_success:
           requires: [
