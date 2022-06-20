@@ -349,7 +349,6 @@ jobs:
       - checkout
       - install-aws
       - install-nodejs
-
       - run:
           name: Get backend url & Backend smoke test
           command: |
@@ -365,7 +364,6 @@ jobs:
             else
               exit 1
             fi
-
       - run:
           name: Frontend smoke test.
           command: |
@@ -376,6 +374,7 @@ jobs:
             else 
               exit 1
             fi
+
       # - destroy-environment
       # - revert-migrations
 
@@ -392,7 +391,7 @@ jobs:
             export OLD_DEPLOYMENT_ID=$(aws cloudformation \
                    list-exports --query "Export[?Name==\`WorkflowID\`].Value" \
                    --no-paginate --output text)
-            echo "Old Deployment/workflow Id: $OLD_DEPLOYMENT_ID"
+            echo "Old Deployment/workflow Id:$OLD_DEPLOYMENT_ID"
             curl https://kvdb.io/${KVDB_BUCKET}/old_deployment_id -d "${OLD_DEPLOYMENT_ID}"
 
       - run:
@@ -400,8 +399,8 @@ jobs:
           command: |
             aws cloudformation deploy \
             --template-file .circleci/files/cloudfront.yml \
-            --parameters-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:8}" \
-            --stack-name InitialStack
+            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:8}" \
+            --stack-name initalstack
 
       - destroy-environment
       - revert-migrations
