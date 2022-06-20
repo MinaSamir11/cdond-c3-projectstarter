@@ -350,25 +350,6 @@ jobs:
       - install-aws
       - install-nodejs
       - run:
-          name: Get backend url
-          command: |
-            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:8}" \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --output text)
-
-      - run:
-          name: Backend smoke test.
-          command: |
-            export BASE_URL=http://${BACKEND_PUBLIC_IP}:3030
-            if curl -s $BASE_URL/api/status | grep "ok"
-            then 
-              exit 0
-            else
-              exit 1
-            fi
-
-      - run:
           name: Frontend smoke test.
           command: |
             FRONTEND_URL= http://udapeople-${CIRCLE_WORKFLOW_ID:0:8}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
@@ -378,6 +359,22 @@ jobs:
             else 
               exit 1
             fi
+      - run:
+          name: Get backend url & Backend smoke test
+          command: |
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:8}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+
+            export BASE_URL=http://${BACKEND_PUBLIC_IP}:3030 
+            if curl -s $BASE_URL/api/status | grep "ok"
+            then 
+              exit 0
+            else
+              exit 1
+            fi
+
       # - destroy-environment
       # - revert-migrations
 
@@ -440,16 +437,16 @@ workflows:
     jobs:
       - build-frontend
       - build-backend
-      # - test-frontend:
-      #     requires: [build-frontend]
-      # - test-backend:
-      #     requires: [build-backend]
-      # - scan-backend:
-      #     requires: [build-backend]
-      # - scan-frontend:
-      #     requires: [build-frontend]
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
       - deploy-infrastructure:
-          # requires: [test-frontend, test-backend]
+          requires: [test-frontend, test-backend]
           filters:
             branches:
               only: [master]
