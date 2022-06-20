@@ -1,9 +1,4 @@
-# - name: "Add NodeJS from Nodesource"
-#   become: true
-#   shell: |
-#     curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-#     sudo apt-get install -y nodejs
-
+---
 - name: "Setup NodeJS"
   become: true
   apt:
