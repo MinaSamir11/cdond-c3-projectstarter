@@ -50,9 +50,9 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            aws s3 rm s3://udapeople-<< parameters.Workflow_ID >> --recursive
             aws cloudformation delete-stack \
               --stack-name backend-fwd-p3-<< parameters.Workflow_ID >>
+            aws s3 rm s3://udapeople-<< parameters.Workflow_ID >> --recursive
             aws cloudformation delete-stack \
               --stack-name frontend-fwd-p3-<< parameters.Workflow_ID >>
 
@@ -239,8 +239,8 @@ jobs:
     docker:
       - image: circleci/node:13.8.0
     steps:
-      - checkout
       - install-aws
+      - checkout
       - run:
           name: Run migrations
           command: |
@@ -342,30 +342,44 @@ jobs:
       - destroy-environment
       - revert-migrations
 
-      # Here's where you will add some code to rollback on failure
+  smoke-test:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - install-aws
+      - install-nodejs
+      - run:
+          name: Get backend url
+          command: |
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:8}" \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --output text)
 
-  #   smoke-test:
-  #     docker:
-  #       # Lightweight Docker image
-  #     steps:
-  #       # Checkout code from git
-  #       - run:
-  #           name: Install dependencies
-  #           command: |
-  #             # your code here
-  #       - run:
-  #           name: Get backend url
-  #           command: |
-  #             # your code here
-  #       - run:
-  #           name: Backend smoke test.
-  #           command: |
-  #             # your code here
-  #       - run:
-  #           name: Frontend smoke test.
-  #           command: |
-  #             # your code here
-  #       # Here's where you will add some code to rollback on failure
+      - run:
+          name: Backend smoke test.
+          command: |
+            export BASE_URL=http://${BACKEND_PUBLIC_IP}:3030
+            if curl -s $BASE_URL/api/status | grep "ok"
+            then 
+              exit 0
+            else
+              exit 1
+            fi
+
+      - run:
+          name: Frontend smoke test.
+          command: |
+            FRONTEND_URL= http://udapeople-${CIRCLE_WORKFLOW_ID:0:8}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
+            if curl -s $FRONTEND_URL | grep "Welcome"
+            then 
+              exit 0
+            else 
+              exit 1
+            fi
+      - destroy-environment
+      - revert-migrations
 
   #   cloudfront-update:
   #     docker:
@@ -451,9 +465,8 @@ workflows:
             ]
       - deploy-backend:
           requires: [run-migrations]
-
-      # - smoke-test:
-      #     requires: [deploy-backend, deploy-frontend]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
       #     requires: [smoke-test]
       # - cleanup:
