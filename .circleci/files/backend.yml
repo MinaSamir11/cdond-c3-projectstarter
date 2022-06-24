@@ -71,8 +71,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub backend-${ID}
-        - Key: Fwd-p3
-          Value: Fwd-udacity-p3-udapeople
+        - Key: Fwd-p3-backend-instance
+          Value: Fwd-backend-udacity-p3-udapeople
 
   EC2PrometheusInstance:
     Type: AWS::EC2::Instance
@@ -85,7 +85,7 @@ Resources:
       # Ubuntu 18 or higher works fine
       ImageId: ami-068663a3c619dd892
       Tags:
-        - Key: Fwd-p3
-          Value: Fwd-udacity-p3-udapeople
+        - Key: Fwd-p3-prometheus-instance
+          Value: Fwd-prometheus-udacity-p3-udapeople
         - Key: Name
           Value: Prometheus-Server
