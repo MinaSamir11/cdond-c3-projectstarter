@@ -419,17 +419,21 @@ jobs:
           name: Get old stack workflow id & Remove old stacks and files
           command: |
             export STACKS=($(aws cloudformation list-stacks \
-                -- query "StackSummaries[*].StackName" \
-                 --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+                --query "StackSummaries[*].StackName" \
+                --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+
             echo stack names: "${STACKS[@]}"
 
             export OldWorkflowID=$(curl  --insecure https://kvdb.io/${KVDB_BUCKET}/old_deployment_id)
             echo Old Workflow ID: $OldWorkflowID
+
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then 
               aws s3 rm s3://udapeople-${OldWorkflowID} --recursive
+
               aws cloudformation delete-stack \
               --stack-name "frontend-fwd-p3-${OldWorkflowID}"
+
               aws cloudformation delete-stack \
               --stack-name "backend-fwd-p3-${OldWorkflowID}"
             fi
