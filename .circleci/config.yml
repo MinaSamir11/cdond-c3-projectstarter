@@ -432,6 +432,7 @@ jobs:
               --stack-name "frontend-fwd-p3-${OldWorkflowID}"
               aws cloudformation delete-stack \
               --stack-name "backend-fwd-p3-${OldWorkflowID}"
+            fi
 
   notify_on_success:
     docker:
