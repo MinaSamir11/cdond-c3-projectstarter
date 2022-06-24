@@ -61,6 +61,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
+
       SecurityGroups:
         - Ref: InstanceSecurityGroup
       KeyName: fwd-key-pairs # If you use another key pair name, you should change this value to match.
@@ -72,3 +73,19 @@ Resources:
           Value: !Sub backend-${ID}
         - Key: Fwd-p3
           Value: Fwd-udacity-p3-udapeople
+
+  EC2PrometheusInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      SecurityGroups:
+        - Ref: PrometheusServerSecurityGroup
+      KeyName: Fwd-promtheus-server-key # If you use another key pair name, you should change this value to match.
+      # If this ami id is not available for you, you can find another (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/finding-an-ami.html)
+      # Ubuntu 18 or higher works fine
+      ImageId: ami-068663a3c619dd892
+      Tags:
+        - Key: Fwd-p3
+          Value: Fwd-udacity-p3-udapeople
+        - Key: Name
+          Value: Prometheus-Server
