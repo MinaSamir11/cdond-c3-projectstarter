@@ -285,7 +285,6 @@ jobs:
             --output text) 
              
             export API_URL=API_URL="http://${BACKEND_PUBLIC_IP}:3030"
-            pwd
             cd frontend
             touch .env
             echo $API_URL > .env
@@ -294,9 +293,7 @@ jobs:
       - run:
           name: Deploy frontend objects
           command: |
-            pwd
             cd frontend
-            echo ${API_URL}
             npm run build
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:8} --recursive
 
@@ -395,10 +392,10 @@ jobs:
           name: Save Old Deployment workflow id to kvdb.io
           command: |
             export OLD_DEPLOYMENT_ID=$(aws cloudformation \
-                   list-exports --query "Export[?Name==\`WorkflowID\`].Value" \
+                   list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                    --no-paginate --output text)
             echo "Old Deployment/workflow Id:$OLD_DEPLOYMENT_ID"
-            curl https://kvdb.io/${KVDB_BUCKET}/old_deployment_id -d "${OLD_DEPLOYMENT_ID}"
+            curl https://kvdb.io/${KVDB_BUCKET}/old_deployment_id -d "$OLD_DEPLOYMENT_ID"
 
       - run:
           name: Update cloudfront distribution
