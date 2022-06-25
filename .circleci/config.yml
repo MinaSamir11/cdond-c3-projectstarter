@@ -489,7 +489,6 @@ workflows:
             [
               test-frontend,
               test-backend,
-              build-front,
               build-backend,
               deploy-infrastructure,
               configure-infrastructure,
